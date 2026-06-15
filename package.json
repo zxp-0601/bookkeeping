@@ -1,0 +1,12 @@
+{
+  "name": "bookkeeping",
+  "version": "1.0.0",
+  "description": "记账系统 - 订单管理系统",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
