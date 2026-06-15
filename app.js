@@ -1,6 +1,7 @@
 // 导入 Node.js 内置模块
 const http = require('http');
 const fs = require('fs');
+const process = require('process');
 const path = require('path');
 const { URL } = require('url');
 
@@ -26,6 +27,26 @@ function writeDB(data) {
 }
 
 // 如果数据文件不存在则初始化空数组
+/**
+ * 全局异常处理 — 防止未捕获的错误导致进程崩溃
+ */
+process.on('uncaughtException', (err) => {
+  console.error('  ❌ 未捕获异常:', err.message);
+  console.error(err.stack);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('  ❌ 未处理的 Promise 拒绝:', reason);
+});
+
+/**
+ * 优雅关闭 — 收到 SIGTERM（Railway 停止实例时）先停止接受新请求，再退出
+ */
+process.on('SIGTERM', () => {
+  console.log('  🛑 收到 SIGTERM，正在优雅关闭...');
+  server.close(() => process.exit(0));
+});
+
 if (!fs.existsSync(DB_PATH)) {
   writeDB([]);
   console.log(`  📄  初始化数据文件: ${DB_PATH}`);
@@ -104,6 +125,15 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const pathname = url.pathname.replace(/\/+$/, '') || '/index.html';
   const params = url.searchParams;
+
+  // === GET /health — Railway 健康检查端点 ===
+  if (req.method === 'GET' && pathname === '/health') {
+    res.writeHead(200, {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json; charset=utf-8'
+    });
+    return res.end(JSON.stringify({ ok: true, uptime: process.uptime() }));
+  }
 
   // CORS 跨域请求头
   const corsHeaders = {
@@ -330,6 +360,14 @@ const server = http.createServer((req, res) => {
   }
 
   json({ ok: false, error: 'Not Found' }, 404);
+});
+
+// 服务器级错误处理（端口冲突等）
+server.on('error', (err) => {
+  console.error('  ❌ 服务器错误:', err.message);
+  if (err.code === 'EADDRINUSE') {
+    console.error('  💡 端口已被占用，请检查是否有其他实例在运行');
+  }
 });
 
 // 启动服务器
