@@ -396,8 +396,10 @@ function onQtyChange() {
 function onSalesChange() {
   var sales = parseFloat(document.getElementById('fSales').value);
   var sf = document.getElementById('fService');
-  if (sales > 0 && (!sf.value || parseFloat(sf.value) <= 0)) {
+  if (sales > 0) {
     sf.value = (sales * 0.006).toFixed(2);
+  } else {
+    sf.value = '';
   }
 }
 
@@ -438,8 +440,8 @@ function smartParse() {
   var qm = text.match(/卖了(\d+)(?:把|个|件|双|只|条|箱|份|套|单)/);
   if (qm) quantity = parseInt(qm[1]);
   var sales_amount = 0;
-  var sm = text.match(/卖了(?:\d+(?:把|个|件|双|只|条|箱|份|套|单)[，,]*)?(\d+(?:\.\d+)?)(?:块钱|元|米)/);
-  if (!sm) sm = text.match(/卖了(\d+(?:\.\d+)?)(?:块钱|元|米)/);
+  var sm = text.match(/卖了[\s\S]*?(\d+(?:\.\d+)?)(?:块钱|元|米)/);
+  if (!sm) sm = text.match(/卖了[\s\S]*?(\d+(?:\.\d+)?)(?:块钱|元|米)/);
   if (sm) sales_amount = parseFloat(sm[1]);
   var customer_name = '';
   var cm = text.match(/(?:收货人|收件人|联系人|姓名)[：:](\S+)/);
@@ -778,12 +780,12 @@ function renderTable(records) {
     pageTotalShipping += r.shipping_fee;
     pageTotalService += r.service_fee;
     pageTotalCoop += r.cooperation_fee;
-    pageTotalProfit += r.profit;
+    pageTotalProfit += (r.profit !== undefined ? r.profit : r.cooperation_fee || 0);
   });
 
   var html = '<table><thead><tr><th style="width:36px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th><th>日期</th><th>数量</th><th>销售额</th><th>成本</th><th>快递费</th><th>手续费</th><th>合作费</th><th>单笔利润</th><th>完成情况</th><th>客户名称</th><th>昵称</th><th>快递单号</th><th>规格</th><th>渠道</th><th>地址</th><th></th></tr></thead><tbody>';
   pageData.forEach(function(r) {
-    var profit = r.profit;
+    var profit = r.profit !== undefined ? r.profit : r.cooperation_fee || 0;
     var profitCls = profit >= 0 ? 'profit-pos' : 'profit-neg';
     var rStr = JSON.stringify(r).replace(/"/g,'&quot;');
     html += '<tr class="status-row-' + r.status + '">' +

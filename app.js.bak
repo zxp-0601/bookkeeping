@@ -170,7 +170,6 @@ const server = http.createServer((req, res) => {
         id: nextId(records),
         quantity: qty, sales_amount: sales, cost, shipping_fee: shipping, service_fee: service,
         cooperation_fee: coop,
-        profit: coop,
         status: (d.status && d.status.trim()) ? d.status : '未完成',
         customer_name: d.customer_name || '', platform_nickname: d.platform_nickname || '',
         tracking_number: d.tracking_number || '', product_spec: d.product_spec || '',
@@ -211,7 +210,6 @@ const server = http.createServer((req, res) => {
       } else {
         record.cooperation_fee = calcSplit(record.sales_amount, record.cost, record.shipping_fee, record.service_fee);
       }
-      record.profit = calcProfit(record);
       records[idx] = record;
       writeDB(records);
       json({ ok: true, data: { id: record.id, profit: calcProfit(record), cooperation_fee: record.cooperation_fee } });
@@ -311,7 +309,7 @@ process.on('SIGTERM', () => {
 });
 
 // 启动服务器
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, () => {
   process.stderr.write('[boot] 服务已启动在端口 ' + PORT + '\n');
   console.log('\n  ✅ 订单利润统计已启动！');
   console.log('  🌐  端口: ' + PORT);
