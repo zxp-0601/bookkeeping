@@ -250,7 +250,7 @@
 
 **计算公式**：
 - `cooperation_fee = (sales_amount - cost - shipping_fee - service_fee) / 2`（用户可手动覆盖）
-- `profit = cooperation_fee`（二者相等，用户可手动覆盖）
+- `profit = cooperation_fee`（与合作费同步，新订单默认相等，编辑时后端自动重算）
 - `手续费 = 销售额 × 0.006`（默认值，用户可修改）
 - `成本 = 数量 × 6`（默认值，用户可修改）
 
